@@ -171,16 +171,15 @@ const showAllBooks = async (request, h) => {
   return response
 }
 
-const getBookByIdHandler = (request, h) => {
+const getBookByIdHandler = async (request, h) => {
   const { bookId } = request.params
 
-  const book = books.filter((book) => book.id === bookId)[0]
-
-  if (book !== undefined) {
+  const getBookById = await client.query(`SELECT * FROM users WHERE id =${bookId}`)
+  if (getBookById.rowCount > 0) {
     const response = h.response({
       status: 'success',
       data: {
-        book
+        book: getBookById.rows
       }
     })
 
