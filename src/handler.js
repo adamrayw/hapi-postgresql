@@ -83,19 +83,21 @@ const showAllBooks = async (request, h) => {
     return mapped
   }
 
-  if (name === 'Dicoding' || name === 'dicoding') {
-    const arr2 = [{
-      name: 'Dicoding'
-    }, {
-      name: 'dicoding'
-    }]
+  if (name) {
+    // const arr2 = [{
+    //   name: 'Dicoding'
+    // }, {
+    //   name: 'dicoding'
+    // }]
     // const book = books.filter(book => book.name.toLowerCase().includes(name))
-    const output = books.filter(({ name }) => arr2.some((item) => name.includes(item.name)))
-    const bookss = mapFun(output)
+    // const output = books.filter(({ name }) => arr2.some((item) => name.includes(item.name)))
+    // const bookss = mapFun(output)
+    const nameQuery = await client.query(`SELECT name FROM users LIKE name = ${name}`)
+
     const response = h.response({
       status: 'success',
       data: {
-        books: bookss
+        books: nameQuery.rows
       }
     })
 
@@ -132,12 +134,12 @@ const showAllBooks = async (request, h) => {
   }
 
   if (finished === '0') {
-    const book = books.filter((bo) => bo.finished === false)
-    const bookss = mapFun(book)
+    const finishedFalseQuery = await client.query('SELECT * FROM users where finished = false')
+
     const response = h.response({
       status: 'success',
       data: {
-        books: bookss
+        books: finishedFalseQuery.rows
       }
     })
 
@@ -159,7 +161,7 @@ const showAllBooks = async (request, h) => {
     return response
   }
 
-  // const bookss = mapFun(books)
+  // if no one query params, get all data
   const allBooks = await client.query('SELECT * FROM users')
 
   const response = h.response({
