@@ -14,6 +14,11 @@ const schema = Joi.object().keys({
     'any.year': 'Not a valid year address.',
     'any.empty': 'year is required.',
     'any.required': 'Year dibutuhin woi!'
+  }),
+  author: Joi.string().max(10).required().messages({
+    'any.year': 'Not a valid year address.',
+    'any.empty': 'year is required.',
+    'any.required': 'Year dibutuhin woi!'
   })
 })
 
@@ -30,7 +35,7 @@ const storeBookHandler = (request, h) => {
     finished = true
   }
 
-  const { error, value } = schema.validate({ name, year }, { abortEarly: false })
+  const { error, value } = schema.validate({ name, year, author }, { abortEarly: false })
 
   if (readPage > pageCount) {
     const response = h.response({
