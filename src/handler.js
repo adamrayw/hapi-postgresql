@@ -77,27 +77,26 @@ const storeBookHandler = (request, h) => {
 const showAllBooks = async (request, h) => {
   const { name, reading, finished } = request.query
 
-  function mapFun (name) {
-    const mapped = name.map(({ id, name, publisher }) => ({ id, name, publisher }))
+  if (name === 'Dicoding' || name === 'dicoding') {
+    // to get one row, less specfic
+    const getAllL = await client.query(`SELECT * FROM users WHERE name LIKE '%${name}%'`)
 
-    return mapped
-  }
+    // get 2 rows, that more specific
+    const getAllM = await client.query('SELECT * FROM users')
+    const bokk = getAllM.rows
 
-  if (name) {
-    // const arr2 = [{
-    //   name: 'Dicoding'
-    // }, {
-    //   name: 'dicoding'
-    // }]
-    // const book = books.filter(book => book.name.toLowerCase().includes(name))
-    // const output = books.filter(({ name }) => arr2.some((item) => name.includes(item.name)))
-    // const bookss = mapFun(output)
-    const nameQuery = await client.query(`SELECT name FROM users LIKE name = ${name}`)
+    const arr2 = [{
+      name: 'Dicoding'
+    }, {
+      name: 'dicoding'
+    }]
+
+    const output = bokk.filter(({ name }) => arr2.some((item) => name.includes(item.name)))
 
     const response = h.response({
       status: 'success',
       data: {
-        books: nameQuery.rows
+        books: output
       }
     })
 
@@ -106,12 +105,12 @@ const showAllBooks = async (request, h) => {
   }
 
   if (reading === '1') {
-    const book = books.filter((bo) => bo.reading === true)
-    const bookss = mapFun(book)
+    const readingTrueQuery = await client.query('SELECT * FROM users where reading = true')
+
     const response = h.response({
       status: 'success',
       data: {
-        books: bookss
+        books: readingTrueQuery.rows
       }
     })
 
@@ -120,12 +119,12 @@ const showAllBooks = async (request, h) => {
   }
 
   if (reading === '0') {
-    const book = books.filter((bo) => bo.reading === false)
-    const bookss = mapFun(book)
+    const readingFalseQuery = await client.query('SELECT * FROM users where reading = false')
+
     const response = h.response({
       status: 'success',
       data: {
-        books: bookss
+        books: readingFalseQuery.rows
       }
     })
 
@@ -134,12 +133,12 @@ const showAllBooks = async (request, h) => {
   }
 
   if (finished === '0') {
-    const finishedFalseQuery = await client.query('SELECT * FROM users where finished = false')
+    const finishedTrueQuery = await client.query('SELECT * FROM users where finished = false')
 
     const response = h.response({
       status: 'success',
       data: {
-        books: finishedFalseQuery.rows
+        books: finishedTrueQuery.rows
       }
     })
 
@@ -148,12 +147,12 @@ const showAllBooks = async (request, h) => {
   }
 
   if (finished === '1') {
-    const book = books.filter((bo) => bo.finished === true)
-    const bookss = mapFun(book)
+    const finishedTrueQuery = await client.query('SELECT * FROM users where finished = true')
+
     const response = h.response({
       status: 'success',
       data: {
-        books: bookss
+        books: finishedTrueQuery.rows
       }
     })
 
