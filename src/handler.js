@@ -201,63 +201,65 @@ const getBookByIdHandler = async (request, h) => {
   return response
 }
 
-const updateBookByIdHandler = (request, h) => {
+const updateBookByIdHandler = async (request, h) => {
   const { bookId } = request.params
   const { name, year, author, summary, publisher, pageCount, readPage, reading } = request.payload
 
-  const index = books.findIndex((book) => book.id === bookId)
   const updatedAt = new Date().toISOString()
 
-  if (index !== -1) {
-    if (name === '' | name === undefined | name < 1) {
-      const response = h.response({
-        status: 'fail',
-        message: 'Gagal memperbarui buku. Mohon isi nama buku'
-      })
+  const schema = Joi.object().keys({
+    name: Joi.string().required().empty()
+  })
 
-      response.code(400)
-      return response
-    }
+  const { error, value } = schema.validate({ name }, { abortEarly: true })
 
-    if (readPage > pageCount) {
-      const response = h.response({
-        status: 'fail',
-        message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount'
-      })
-
-      response.code(400)
-      return response
-    }
-
-    books[index] = {
-      ...books[index],
-      name,
-      year,
-      author,
-      summary,
-      publisher,
-      pageCount,
-      readPage,
-      reading,
-      updatedAt
-    }
-
+  if (readPage > pageCount) {
     const response = h.response({
-      status: 'success',
-      message: 'Buku berhasil diperbarui'
+      status: 'fail',
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount'
     })
 
-    response.code(200)
+    response.code(400)
     return response
   }
 
-  const response = h.response({
-    status: 'fail',
-    message: 'Gagal memperbarui buku. Id tidak ditemukan'
-  })
+  console.log(value)
 
-  response.code(404)
-  return response
+  if (error) {
+    const response = h.response({
+      status: 'fail',
+      error: error.details.map(({ message }) => ({ message }))
+    })
+
+    response.code(400)
+    return response
+  }
+
+  const checkBookId = await client.query(`SELECT * FROM users WHERE id=${bookId}`)
+
+  if (checkBookId.rowCount < 1) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Gagal memperbarui buku. Id tidak ditemukan',
+      data: checkBookId.rowCount
+    })
+
+    response.code(404)
+    return response
+  } else {
+    if (value.name) {
+      const updateBook = await client.query(`UPDATE users SET name='${value.name}', year=${year}, author='${author}', summary='${summary}', publisher='${publisher}', pagecount=${pageCount}, readpage=${readPage}, reading=${reading}, updatedat='${updatedAt}' WHERE id=${bookId} RETURNING *`)
+
+      const response = h.response({
+        status: 'success',
+        message: 'Buku berhasil diperbarui',
+        data: updateBook.rows
+      })
+
+      response.code(200)
+      return response
+    }
+  }
 }
 
 const deleteBookByIdHandler = (request, h) => {
