@@ -1,6 +1,5 @@
 const client = require('../src/db/index')
 const { customAlphabet } = require('nanoid')
-const books = require('./books')
 
 const Joi = require('joi')
 
@@ -84,7 +83,7 @@ const showAllBooks = async (request, h) => {
 
   if (name === 'Dicoding' || name === 'dicoding') {
     // to get one row, less specfic
-    const getAllL = await client.query(`SELECT * FROM users WHERE name LIKE '%${name}%'`)
+    // const getAllL = await client.query(`SELECT * FROM users WHERE name LIKE '%${name}%'`)
 
     // get 2 rows, that more specific
     const getAllM = await client.query('SELECT * FROM users')
@@ -262,12 +261,20 @@ const updateBookByIdHandler = async (request, h) => {
   }
 }
 
-const deleteBookByIdHandler = (request, h) => {
+const deleteBookByIdHandler = async (request, h) => {
   const { bookId } = request.params
 
-  const index = books.findIndex((book) => book.id === bookId)
+  const checkBookId = await client.query(`SELECT * FROM users WHERE id=${bookId}`)
 
-  if (bookId) {
+  if (checkBookId.rowCount < 1) {
+    const response = h.response({
+      status: 'fail',
+      message: 'Buku gagal dihapus. Id tidak ditemukan'
+    })
+
+    response.code(404)
+    return response
+  } else {
     client.query(`DELETE FROM public.users where id=${bookId}`, (err, success) => {
       if (!err) {
         console.log('success : ' + success.rows)
@@ -284,26 +291,6 @@ const deleteBookByIdHandler = (request, h) => {
     response.code(200)
     return response
   }
-
-  if (index !== -1) {
-    books.splice(index, 1)
-
-    const response = h.response({
-      status: 'success',
-      message: 'Buku berhasil dihapus'
-    })
-
-    response.code(200)
-    return response
-  }
-
-  const response = h.response({
-    status: 'fail',
-    message: 'Buku gagal dihapus. Id tidak ditemukan'
-  })
-
-  response.code(404)
-  return response
 }
 
 module.exports = { storeBookHandler, showAllBooks, getBookByIdHandler, updateBookByIdHandler, deleteBookByIdHandler }
